@@ -1,0 +1,14 @@
+manifest-version: "1"
+min-version: v0.86.2
+name: GitHub Description Organizer
+emoji: "📝"
+description: Fill missing descriptions for the token owner's public repositories.
+
+includes:
+  - .github/workflows/assign-descriptions.md
+
+config:
+  - type: repo-secret
+    name: COPILOT_GITHUB_TOKEN
+    prompt: Paste a fine-grained PAT for Copilot and repository descriptions
+    description: Grant Copilot Requests, Administration (write), and Contents (read).
