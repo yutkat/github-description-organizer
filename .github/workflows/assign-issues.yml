@@ -1,0 +1,46 @@
+name: Assign description issues
+
+on:
+  workflow_run:
+    workflows:
+      - Assign repository descriptions
+    types:
+      - completed
+
+permissions:
+  issues: write
+
+jobs:
+  assign:
+    name: Assign open issues
+    runs-on: ubuntu-latest
+    steps:
+      # The workflow opens failure and weekly plan issues with GITHUB_TOKEN,
+      # which neither assigns anyone nor triggers `issues` events, so assign
+      # them here. gh-aw's conclusion job finishes before this event fires.
+      - name: Assign unassigned open issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ASSIGNEE: ${{ vars.ISSUE_ASSIGNEE || github.repository_owner }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          issues=$(gh issue list --state open --json number,assignees \
+            --jq '.[] | select(.assignees == []) | .number')
+          for issue in $issues; do
+            gh issue edit "$issue" --add-assignee "$ASSIGNEE"
+          done
+
+          case "$CONCLUSION" in
+            success | skipped | cancelled | neutral) exit 0 ;;
+          esac
+          open_count=$(gh issue list --state open --label agentic-workflows \
+            --json number --jq 'length')
+          if [ "$open_count" -eq 0 ]; then
+            gh issue create \
+              --title "[aw] Assign repository descriptions ${CONCLUSION}" \
+              --body "Workflow run concluded with \`${CONCLUSION}\`: ${RUN_URL}" \
+              --label agentic-workflows \
+              --assignee "$ASSIGNEE"
+          fi

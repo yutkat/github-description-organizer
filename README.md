@@ -39,6 +39,12 @@ The same token used by GitHub Topic Organizer can be reused if it has these
 permissions and repository access. When using selected repositories, include
 the repository hosting the workflow as well as the target repositories.
 
+Failed or incomplete runs and weekly plan issues are opened without an
+assignee. After each run, the `assign-issues.yml` workflow assigns every
+unassigned open issue to the repository owner (or the user in the
+`ISSUE_ASSIGNEE` Actions variable) so they trigger notifications. It is not
+part of the `gh aw add` package; copy it manually into installed repositories.
+
 ## Behavior
 
 - Runs weekly on Monday and supports manual dispatch with `batch_size` (1-50).
