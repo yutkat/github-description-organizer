@@ -1,7 +1,7 @@
 ---
 name: Assign repository descriptions
 description: Fill missing descriptions for the authenticated user's public repositories
-emoji: 📝
+emoji: "\U0001F4DD"
 resources:
   - github-description-organizer/github_api.py
   - github-description-organizer/plan.py
@@ -62,11 +62,18 @@ post-steps:
         --project .github/workflows/github-description-organizer \
         python .github/workflows/github-description-organizer/apply.py \
         --plan .github/aw-input/description-plan.json
+safe-outputs:
+  noop:
+    report-as-issue: false
+  create-issue:
+    title-prefix: "[assign-descriptions]"
+    labels:
+      - assign-descriptions
 tools:
   edit: null
   bash:
     - cat .github/aw-input/description-input.json
-    - "jq *"
+    - jq *
 timeout-minutes: 20
 ---
 
