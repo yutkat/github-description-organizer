@@ -55,6 +55,8 @@ part of the `gh aw add` package; copy it manually into installed repositories.
 - Validates that every input repository appears exactly once, the input
   digest matches, and each description is 1-350 characters of single-line
   text without surrounding whitespace or control characters.
+- Applies descriptions in a separate `apply` job that runs only after threat
+  detection passes.
 - Rechecks each repository immediately before updating it. Skips repositories
   that gained a description, became private or archived, were transferred to
   another owner, or are no longer accessible.
@@ -65,8 +67,9 @@ The recheck and update are separate API requests, so a manual edit made
 between them can still race with the update. Descriptions are AI-generated;
 repositories with little README content may receive a general description.
 
-If you edit the Agentic Workflow source, run `gh aw compile` and include the
-generated `.github/workflows/assign-descriptions.lock.yml` with your changes.
+If you edit the Agentic Workflow source, run `gh aw compile` (gh-aw v1.0.1 or
+later) and include the generated `.github/workflows/assign-descriptions.lock.yml`
+with your changes.
 
 ## Development
 

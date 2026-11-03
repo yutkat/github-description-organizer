@@ -21,16 +21,16 @@ resources:
 permissions:
   contents: read
 engine: copilot
-model: gpt-6.1-terra
+model: gpt-6.1-sol
 steps:
   - name: Check out repository
-    uses: actions/checkout@v7
+    uses: actions/checkout@v7.0.1
     with:
       persist-credentials: false
   - name: Set up uv
-    uses: astral-sh/setup-uv@v9
+    uses: astral-sh/setup-uv@v10.3.3
     with:
-      enable-cache: true
+      enable-cache: false
   - name: Collect public repositories without descriptions
     id: prepare
     env:
@@ -53,15 +53,57 @@ steps:
         echo "has_changes=true" >> "$GITHUB_OUTPUT"
       fi
 post-steps:
-  - name: Apply validated description assignments
+  - name: Validate description plan
     if: steps.prepare.outputs.has_changes == 'true'
-    env:
-      COPILOT_GITHUB_TOKEN: "${{ secrets.COPILOT_GITHUB_TOKEN }}"
     run: |
       uv run --frozen \
         --project .github/workflows/github-description-organizer \
         python .github/workflows/github-description-organizer/apply.py \
-        --plan .github/aw-input/description-plan.json
+        --plan .github/aw-input/description-plan.json --dry-run
+  - name: Upload validated description plan
+    if: steps.prepare.outputs.has_changes == 'true'
+    uses: actions/upload-artifact@v7
+    with:
+      name: description-plan
+      path: |
+        .github/aw-input/description-input.json
+        .github/aw-input/description-plan.json
+      if-no-files-found: error
+      retention-days: 1
+jobs:
+  apply:
+    needs:
+      - agent
+      - detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download validated description plan
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: description-plan
+          path: .github/aw-input
+      - name: Set up uv
+        if: steps.download.outcome == 'success'
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: false
+      - name: Apply validated description assignments
+        if: steps.download.outcome == 'success'
+        env:
+          COPILOT_GITHUB_TOKEN: "${{ secrets.COPILOT_GITHUB_TOKEN }}"
+        run: |
+          uv run --frozen \
+            --project .github/workflows/github-description-organizer \
+            python .github/workflows/github-description-organizer/apply.py \
+            --plan .github/aw-input/description-plan.json
 safe-outputs:
   noop:
     report-as-issue: false

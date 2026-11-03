@@ -1,5 +1,5 @@
 manifest-version: "1"
-min-version: v0.86.2
+min-version: v1.0.1
 name: GitHub Description Organizer
 emoji: "📝"
 description: Fill missing descriptions for the token owner's public repositories.
